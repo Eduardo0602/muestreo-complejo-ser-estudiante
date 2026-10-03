@@ -26,25 +26,31 @@ Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*
 
 ## Fundamento matemático
 
-Sea $U$ la población de $N$ estudiantes y $y_k$ el puntaje del estudiante $k$. El parámetro es la media poblacional $\bar{Y} = \frac{1}{N}\sum_{k\in U} y_k$. Cada estudiante de la muestra $s$ tiene un peso $w_k$ (el factor de expansión: el inverso de su probabilidad de inclusión, ajustado por no respuesta).
+Sea $`U`$ la población de $`N`$ estudiantes y $`y_k`$ el puntaje del estudiante $`k`$. El parámetro es la media poblacional $`\bar{Y} = \frac{1}{N}\sum_{k\in U} y_k`$. Cada estudiante de la muestra $`s`$ tiene un peso $`w_k`$ (el factor de expansión: el inverso de su probabilidad de inclusión, ajustado por no respuesta).
 
 **Estimadores.** El estimador de Horvitz–Thompson del total y del tamaño poblacional, y el de Hájek de la media, son
 
-$$\hat{Y} = \sum_{k\in s} w_k\, y_k, \qquad \hat{N} = \sum_{k\in s} w_k, \qquad \bar{y}_w = \frac{\hat{Y}}{\hat{N}}.$$
+```math
+\hat{Y} = \sum_{k\in s} w_k\, y_k, \qquad \hat{N} = \sum_{k\in s} w_k, \qquad \bar{y}_w = \frac{\hat{Y}}{\hat{N}}.
+```
 
-$\bar{y}_w$ es un cociente de dos estimadores insesgados, por lo que no es insesgado, pero es consistente y es el que usa `svymean`. Los modos *solo pesos* y *diseño completo* dan **exactamente la misma estimación puntual**; difieren solo en la varianza.
+$`\bar{y}_w`$ es un cociente de dos estimadores insesgados, por lo que no es insesgado, pero es consistente y es el que usa `svymean`. Los modos *solo pesos* y *diseño completo* dan **exactamente la misma estimación puntual**; difieren solo en la varianza.
 
-**Varianza por linealización.** Una expansión de Taylor de primer orden del cociente da $\bar{y}_w - \bar{Y} \approx \frac{1}{N}\sum_{k\in s} w_k (y_k - \bar{Y})$. Con $u_k = w_k (y_k - \bar{y}_w)/\hat{N}$ y $z_{hi}$ la suma de los $u_k$ de la institución $i$ del estrato $h$, el estimador de varianza (instituciones tratadas como seleccionadas con reemplazo dentro de cada estrato) es
+**Varianza por linealización.** Una expansión de Taylor de primer orden del cociente da $`\bar{y}_w - \bar{Y} \approx \frac{1}{N}\sum_{k\in s} w_k (y_k - \bar{Y})`$. Con $`u_k = w_k (y_k - \bar{y}_w)/\hat{N}`$ y $`z_{hi}`$ la suma de los $`u_k`$ de la institución $`i`$ del estrato $`h`$, el estimador de varianza (instituciones tratadas como seleccionadas con reemplazo dentro de cada estrato) es
 
-$$\hat{V}(\bar{y}_w) = \sum_{h=1}^{H} \frac{n_h}{n_h - 1} \sum_{i=1}^{n_h} \left(z_{hi} - \bar{z}_h\right)^2,$$
+```math
+\hat{V}(\bar{y}_w) = \sum_{h=1}^{H} \frac{n_h}{n_h - 1} \sum_{i=1}^{n_h} \left(z_{hi} - \bar{z}_h\right)^2,
+```
 
-donde $n_h$ es el número de instituciones del estrato $h$. El modo *solo pesos* es el caso particular $H = 1$ con cada estudiante como su propia "institución", y el ingenuo es $s^2/n$.
+donde $`n_h`$ es el número de instituciones del estrato $`h`$. El modo *solo pesos* es el caso particular $`H = 1`$ con cada estudiante como su propia "institución", y el ingenuo es $`s^2/n`$.
 
-**Efecto de diseño.** $\text{DEFF} = \hat{V}_{\text{diseño}} / \hat{V}_{\text{MAS}}$ mide cuántas veces más varianza tiene el diseño frente a un muestreo aleatorio simple del mismo tamaño, y $n_{\text{ef}} = n / \text{DEFF}$ es el tamaño de muestra "equivalente". La aproximación de Kish separa sus dos causas:
+**Efecto de diseño.** $`\text{DEFF} = \hat{V}_{\text{diseño}} / \hat{V}_{\text{MAS}}`$ mide cuántas veces más varianza tiene el diseño frente a un muestreo aleatorio simple del mismo tamaño, y $`n_{\text{ef}} = n / \text{DEFF}`$ es el tamaño de muestra "equivalente". La aproximación de Kish separa sus dos causas:
 
-$$\text{DEFF} \approx \underbrace{\left(1 + \text{CV}_w^2\right)}_{\text{pesos desiguales}} \times \underbrace{\left(1 + (\bar{m} - 1)\,\rho\right)}_{\text{conglomerados}},$$
+```math
+\text{DEFF} \approx \underbrace{\left(1 + \text{CV}_w^2\right)}_{\text{pesos desiguales}} \times \underbrace{\left(1 + (\bar{m} - 1)\,\rho\right)}_{\text{conglomerados}},
+```
 
-con $\bar{m}$ estudiantes por institución y $\rho$ la correlación intraclase: cuánto se parecen entre sí los estudiantes de una misma institución.
+con $`\bar{m}`$ estudiantes por institución y $`\rho`$ la correlación intraclase: cuánto se parecen entre sí los estudiantes de una misma institución.
 
 ## Resultados
 
@@ -66,7 +72,7 @@ El intervalo correcto es 3,57 veces más ancho que el de "solo pesos", y el inge
 
 ![IC por diseño](outputs/figuras/ic_matematica_por_diseno.png)
 
-**3. ¿Por qué tanto?** En 4.º EGB el efecto de diseño completo llega a 32,64 en Matemática (hasta 38,44 en Ciencias Naturales): los 12 129 estudiantes equivalen a unos **372 elegidos al azar**. Despejando la aproximación de Kish, la correlación intraclase es $\hat{\rho} \approx 0{,}43$ (0,42683 redondeado a 2 decimales): los estudiantes de una misma institución se parecen mucho, así que cada institución adicional aporta mucha más información que cada estudiante adicional. En 10.º EGB y bachillerato $\hat{\rho}$ baja a valores entre 0,0698 y 0,1639 (aproximación, ver Limitaciones).
+**3. ¿Por qué tanto?** En 4.º EGB el efecto de diseño completo llega a 32,64 en Matemática (hasta 38,44 en Ciencias Naturales): los 12 129 estudiantes equivalen a unos **372 elegidos al azar**. Despejando la aproximación de Kish, la correlación intraclase es $`\hat{\rho} \approx 0{,}43`$ (0,42683 redondeado a 2 decimales): los estudiantes de una misma institución se parecen mucho, así que cada institución adicional aporta mucha más información que cada estudiante adicional. En 10.º EGB y bachillerato $`\hat{\rho}`$ baja a valores entre 0,0698 y 0,1639 (aproximación, ver Limitaciones).
 
 **4. Comparaciones entre dominios con la incertidumbre correcta.** Por ejemplo, en Matemática de 4.º EGB las instituciones particulares (692,49; IC 95 % [686,53; 698,45]) superan a las fiscales (665,58; [657,55; 673,61]). Con el diseño completo los intervalos siguen sin superponerse; en ese mismo grado y campo, las comparaciones por área y por régimen tienen intervalos que sí se superponen y no permiten afirmar diferencias.
 
@@ -112,7 +118,7 @@ muestreo-complejo-ser-estudiante/
 
 - La varianza trata a las instituciones como seleccionadas **con reemplazo** y no usa la corrección por población finita ni la selección proporcional al tamaño exacta: es la aproximación estándar cuando no se publican las probabilidades de cada etapa y suele ser algo conservadora.
 - Los factores de expansión ya incluyen ajustes por no respuesta que no se pueden replicar sin información adicional del Ineval; aquí se toman como dados.
-- La descomposición de Kish es una aproximación; $\hat{\rho}$ debe leerse como orden de magnitud, no como estimación exacta.
+- La descomposición de Kish es una aproximación; $`\hat{\rho}`$ debe leerse como orden de magnitud, no como estimación exacta.
 - Por recomendación del Ineval se analiza cada campo con su propio factor y no se usa el promedio global.
 
 ## Lo que aprendí
