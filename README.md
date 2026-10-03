@@ -4,7 +4,7 @@ Análisis en R de los microdatos oficiales de **Ser Estudiante 2024-2025** (Inev
 
 > **English summary.** Using Ecuador's official national student assessment microdata (50,578 students in 1,197 schools), this R project compares three ways of declaring the same sample: naive (no weights), weights only, and the full stratified two-stage cluster design. Ignoring the weights biases the mean by up to 10.2 points; ignoring the clustering understates standard errors by a factor of 1.8 to 3.8, with design effects up to 38 and intraclass correlations around 0.43 in 4th grade. Every estimate from the `survey` package is re-derived by hand (98/98 checks pass).
 
-![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![Licencia código](https://img.shields.io/badge/c%C3%B3digo-MIT-green)
+![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 
 ## El problema
 
@@ -19,6 +19,10 @@ Es común analizar estos datos de dos formas incorrectas:
 | **Diseño completo** | Estratos, conglomerados (`amie`) y pesos | Nada esencial (ver Limitaciones) |
 
 Pregunta: **¿cuánto cambian la estimación y su incertidumbre según la forma elegida?**
+
+## Datos
+
+Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*, publicado el 15 de diciembre de 2025 en el [portal de datos abiertos del Ecuador](https://www.datosabiertos.gob.ec/dataset/da1aeddc-3bd6-4399-a840-2f5ec67ba64e). Los datos **no se incluyen** en este repositorio: el script los descarga de la fuente oficial. Los códigos anónimos de estudiante cambian entre descargas, pero las estimaciones no.
 
 ## Fundamento matemático
 
@@ -92,9 +96,17 @@ source("R/99_run_all.R")   # descarga los datos oficiales y genera tablas y figu
 | `05_verificaciones.R` | Recalcula todo a mano |
 | `06_figuras.R` | Figuras |
 
-## Datos
+## Estructura del proyecto
 
-Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*, publicado el 15 de diciembre de 2025 en el [portal de datos abiertos del Ecuador](https://www.datosabiertos.gob.ec/dataset/da1aeddc-3bd6-4399-a840-2f5ec67ba64e). Los datos **no se incluyen** en este repositorio: el script los descarga de la fuente oficial. Los códigos anónimos de estudiante cambian entre descargas, pero las estimaciones no.
+```
+muestreo-complejo-ser-estudiante/
+├── R/                    # 00 → 06 y 99_run_all.R
+├── outputs/tablas/       # resultados en CSV (incluye verificaciones.csv)
+├── outputs/figuras/      # 3 figuras
+├── data/                 # se crea al ejecutar (no se versiona)
+├── muestreo-complejo-ser-estudiante.Rproj
+└── LICENSE
+```
 
 ## Limitaciones
 
@@ -110,4 +122,14 @@ Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*
 - Verificar cada salida de `survey` contra su fórmula es la mejor forma de entender qué hace el paquete (y de detectar un diseño mal declarado).
 
 ---
-Eduardo Araque · Matemático (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · Portafolio *De Matemático a Data Scientist*
+
+### Portafolio *De Matemático a Data Scientist*
+
+| Proyecto | Pregunta | Herramientas |
+|---|---|---|
+| **Muestreo complejo con Ser Estudiante** (este repositorio) | ¿Cuánto se equivoca quien ignora el diseño muestral? | R, survey |
+| [EDA con datos sucios: defunciones 2021](https://github.com/Eduardo0602/eda-limpieza-defunciones-ecuador-pandas-sql) | ¿Qué hay que corregir antes de confiar en un registro oficial? | Python, pandas, SQL |
+| [Regresión lineal desde cero](https://github.com/Eduardo0602/regresion-lineal-numpy-desde-cero) | ¿Puede un plano predecir la profundidad de los sismos de Ecuador? | Python, NumPy |
+| [Álgebra lineal visual](https://github.com/Eduardo0602/algebra-lineal-visual-numpy) | ¿Qué hace geométricamente una matriz? | Python, NumPy |
+
+Eduardo Araque · Matemático (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-j%C3%A1come-311b93235)
