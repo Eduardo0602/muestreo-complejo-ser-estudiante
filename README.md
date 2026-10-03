@@ -1,141 +1,144 @@
-# ¿Cuánto se equivoca quien ignora el diseño muestral? Evidencia con la evaluación Ser Estudiante del Ecuador
+<p align="right"><b>English</b> · <a href="README.es.md">Español</a></p>
 
-Análisis en R de los microdatos oficiales de **Ser Estudiante 2024-2025** (Ineval, 50 578 estudiantes, 1 197 instituciones) que compara tres formas de declarar la misma muestra y muestra, con las fórmulas y verificaciones a mano, por qué solo una de ellas es correcta.
+# How wrong is an analysis that ignores the sampling design? Evidence from Ecuador's national student assessment
 
-> **English summary.** Using Ecuador's official national student assessment microdata (50,578 students in 1,197 schools), this R project compares three ways of declaring the same sample: naive (no weights), weights only, and the full stratified two-stage cluster design. Ignoring the weights biases the mean by up to 10.2 points; ignoring the clustering understates standard errors by a factor of 1.8 to 3.8, with design effects up to 38 and intraclass correlations around 0.43 in 4th grade. Every estimate from the `survey` package is re-derived by hand (98/98 checks pass).
+An R analysis of the official microdata of **Ser Estudiante 2024-2025** (Ineval, 50,578 students, 1,197 schools) that compares three ways of declaring the same sample and shows, with the formulas and hand-made checks, why only one of them is correct.
 
-![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
+[![verificaciones](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/actions/workflows/verificaciones.yml/badge.svg)](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/actions/workflows/verificaciones.yml) ![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![renv](https://img.shields.io/badge/renv-locked-7A1F2B) ![License](https://img.shields.io/badge/license-MIT-green)
 
-## El problema
+## The problem
 
-La evaluación Ser Estudiante no es una muestra aleatoria simple. Según la ficha metodológica del Ineval, es un diseño **probabilístico, estratificado y bietápico**: primero se seleccionan instituciones educativas (con probabilidad proporcional al tamaño) dentro de 16 estratos (régimen × área × sostenimiento) y luego hasta 35 estudiantes por institución y nivel. Cada estudiante trae un **factor de expansión** por campo evaluado.
+Ser Estudiante is not a simple random sample. According to Ineval's methodological note, it is a **probabilistic, stratified, two-stage** design: schools are first selected (with probability proportional to size) within 16 strata (school calendar × area × funding), and then up to 35 students per school and grade. Each student carries a **sampling weight** per assessed subject.
 
-Es común analizar estos datos de dos formas incorrectas:
+These data are often analyzed in two incorrect ways:
 
-| Forma | Qué hace | Qué ignora |
+| Approach | What it does | What it ignores |
 |---|---|---|
-| **Ingenua** | Promedio simple de la muestra | Los pesos y el diseño |
-| **Solo pesos** | Usa el factor de expansión, cada estudiante como unidad independiente | Que los estudiantes vienen agrupados en instituciones y estratos |
-| **Diseño completo** | Estratos, conglomerados (`amie`) y pesos | Nada esencial (ver Limitaciones) |
+| **Naive** | Simple sample mean | The weights and the design |
+| **Weights only** | Uses the sampling weight, each student as an independent unit | That students come clustered in schools and strata |
+| **Full design** | Strata, clusters (`amie`) and weights | Nothing essential (see Limitations) |
 
-Pregunta: **¿cuánto cambian la estimación y su incertidumbre según la forma elegida?**
+Question: **how much do the estimate and its uncertainty change with the approach chosen?**
 
-## Datos
+## Data
 
-Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*, publicado el 15 de diciembre de 2025 en el [portal de datos abiertos del Ecuador](https://www.datosabiertos.gob.ec/dataset/da1aeddc-3bd6-4399-a840-2f5ec67ba64e). Los datos **no se incluyen** en este repositorio: el script los descarga de la fuente oficial. Los códigos anónimos de estudiante cambian entre descargas, pero las estimaciones no.
+Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*, published on 15 December 2025 on [Ecuador's open data portal](https://www.datosabiertos.gob.ec/dataset/da1aeddc-3bd6-4399-a840-2f5ec67ba64e). The data are **not included** in this repository: the script downloads them from the official source. Anonymous student codes change between downloads, but the estimates do not.
 
-## Fundamento matemático
+## Mathematical foundation
 
-Sea $`U`$ la población de $`N`$ estudiantes y $`y_k`$ el puntaje del estudiante $`k`$. El parámetro es la media poblacional $`\bar{Y} = \frac{1}{N}\sum_{k\in U} y_k`$. Cada estudiante de la muestra $`s`$ tiene un peso $`w_k`$ (el factor de expansión: el inverso de su probabilidad de inclusión, ajustado por no respuesta).
+Let $`U`$ be the population of $`N`$ students and $`y_k`$ the score of student $`k`$. The parameter is the population mean $`\bar{Y} = \frac{1}{N}\sum_{k\in U} y_k`$. Each student in the sample $`s`$ has a weight $`w_k`$ (the inverse of their inclusion probability, adjusted for non-response).
 
-**Estimadores.** El estimador de Horvitz–Thompson del total y del tamaño poblacional, y el de Hájek de la media, son
+**Estimators.** The Horvitz–Thompson estimators of the total and of the population size, and the Hájek estimator of the mean, are
 
 ```math
 \hat{Y} = \sum_{k\in s} w_k\, y_k, \qquad \hat{N} = \sum_{k\in s} w_k, \qquad \bar{y}_w = \frac{\hat{Y}}{\hat{N}}.
 ```
 
-$`\bar{y}_w`$ es un cociente de dos estimadores insesgados, por lo que no es insesgado, pero es consistente y es el que usa `svymean`. Los modos *solo pesos* y *diseño completo* dan **exactamente la misma estimación puntual**; difieren solo en la varianza.
+$`\bar{y}_w`$ is a ratio of two unbiased estimators, so it is not unbiased, but it is consistent and it is what `svymean` uses. The *weights only* and *full design* approaches give **exactly the same point estimate**; they differ only in the variance.
 
-**Varianza por linealización.** Una expansión de Taylor de primer orden del cociente da $`\bar{y}_w - \bar{Y} \approx \frac{1}{N}\sum_{k\in s} w_k (y_k - \bar{Y})`$. Con $`u_k = w_k (y_k - \bar{y}_w)/\hat{N}`$ y $`z_{hi}`$ la suma de los $`u_k`$ de la institución $`i`$ del estrato $`h`$, el estimador de varianza (instituciones tratadas como seleccionadas con reemplazo dentro de cada estrato) es
+**Linearization variance.** A first-order Taylor expansion of the ratio gives $`\bar{y}_w - \bar{Y} \approx \frac{1}{N}\sum_{k\in s} w_k (y_k - \bar{Y})`$. With $`u_k = w_k (y_k - \bar{y}_w)/\hat{N}`$ and $`z_{hi}`$ the sum of the $`u_k`$ of school $`i`$ in stratum $`h`$, the variance estimator (schools treated as sampled with replacement within each stratum) is
 
 ```math
 \hat{V}(\bar{y}_w) = \sum_{h=1}^{H} \frac{n_h}{n_h - 1} \sum_{i=1}^{n_h} \left(z_{hi} - \bar{z}_h\right)^2,
 ```
 
-donde $`n_h`$ es el número de instituciones del estrato $`h`$. El modo *solo pesos* es el caso particular $`H = 1`$ con cada estudiante como su propia "institución", y el ingenuo es $`s^2/n`$.
+where $`n_h`$ is the number of schools in stratum $`h`$. The *weights only* approach is the special case $`H = 1`$ with each student as their own "school", and the naive one is $`s^2/n`$.
 
-**Efecto de diseño.** $`\text{DEFF} = \hat{V}_{\text{diseño}} / \hat{V}_{\text{MAS}}`$ mide cuántas veces más varianza tiene el diseño frente a un muestreo aleatorio simple del mismo tamaño, y $`n_{\text{ef}} = n / \text{DEFF}`$ es el tamaño de muestra "equivalente". La aproximación de Kish separa sus dos causas:
+**Design effect.** $`\text{DEFF} = \hat{V}_{\text{design}} / \hat{V}_{\text{SRS}}`$ measures how many times more variance the design has than a simple random sample of the same size, and $`n_{\text{eff}} = n / \text{DEFF}`$ is the "equivalent" sample size. Kish's approximation separates its two causes:
 
 ```math
-\text{DEFF} \approx \underbrace{\left(1 + \text{CV}_w^2\right)}_{\text{pesos desiguales}} \times \underbrace{\left(1 + (\bar{m} - 1)\,\rho\right)}_{\text{conglomerados}},
+\text{DEFF} \approx \underbrace{\left(1 + \text{CV}_w^2\right)}_{\text{unequal weights}} \times \underbrace{\left(1 + (\bar{m} - 1)\,\rho\right)}_{\text{clustering}},
 ```
 
-con $`\bar{m}`$ estudiantes por institución y $`\rho`$ la correlación intraclase: cuánto se parecen entre sí los estudiantes de una misma institución.
+with $`\bar{m}`$ students per school and $`\rho`$ the intraclass correlation: how similar students of the same school are to each other.
 
-## Resultados
+## Results
 
-**1. Sin pesos, la media está sesgada.** El área rural está sobrerrepresentada en la muestra (34,88 % de la muestra frente a 20,12 % de la población estimada). La media ingenua supera a la ponderada entre **+0,4744 y +10,2424 puntos** según grado y campo.
+**1. Without weights, the mean is biased.** Rural areas are over-represented in the sample (34.88 % of the sample versus 20.12 % of the estimated population). The naive mean exceeds the weighted one by **+0.4744 to +10.2424 points**, depending on grade and subject.
 
-**2. Sin conglomerados, la incertidumbre se subestima de 1,8 a 3,8 veces.** El error estándar del diseño completo es entre **1,7843 y 3,7558 veces** el que se obtiene declarando solo pesos.
+**2. Without clusters, uncertainty is understated 1.8 to 3.8 times.** The full-design standard error is **1.7843 to 3.7558 times** the one obtained by declaring weights only.
 
-![Razón de errores estándar](outputs/figuras/razon_errores_estandar.png)
+![Ratio of standard errors](outputs/figuras/razon_errores_estandar.png)
 
-Ejemplo, Matemática de 4.º EGB (12 129 estudiantes en 426 instituciones):
+Example, Mathematics in 4th grade (12,129 students in 426 schools):
 
-| Forma | Media | Error estándar | IC 95 % |
+| Approach | Mean | Standard error | 95 % CI |
 |---|---:|---:|---|
-| Ingenua | 678,43243 | 0,55563 | [677,34331; 679,52156] |
-| Solo pesos | 671,64233 | 0,87174 | [669,93359; 673,35107] |
-| **Diseño completo** | **671,64233** | **3,10976** | **[665,52927; 677,75540]** |
+| Naive | 678.43243 | 0.55563 | [677.34331, 679.52156] |
+| Weights only | 671.64233 | 0.87174 | [669.93359, 673.35107] |
+| **Full design** | **671.64233** | **3.10976** | **[665.52927, 677.75540]** |
 
-El intervalo correcto es 3,57 veces más ancho que el de "solo pesos", y el ingenuo ni siquiera contiene la estimación correcta.
+The correct interval is 3.57 times wider than the weights-only one, and the naive interval does not even contain the correct estimate.
 
-![IC por diseño](outputs/figuras/ic_matematica_por_diseno.png)
+![CI by design](outputs/figuras/ic_matematica_por_diseno.png)
 
-**3. ¿Por qué tanto?** En 4.º EGB el efecto de diseño completo llega a 32,64 en Matemática (hasta 38,44 en Ciencias Naturales): los 12 129 estudiantes equivalen a unos **372 elegidos al azar**. Despejando la aproximación de Kish, la correlación intraclase es $`\hat{\rho} \approx 0{,}43`$ (0,42683 redondeado a 2 decimales): los estudiantes de una misma institución se parecen mucho, así que cada institución adicional aporta mucha más información que cada estudiante adicional. En 10.º EGB y bachillerato $`\hat{\rho}`$ baja a valores entre 0,0698 y 0,1639 (aproximación, ver Limitaciones).
+**3. Why so much?** In 4th grade the full design effect reaches 32.64 in Mathematics (up to 38.44 in Natural Sciences): the 12,129 students are worth about **372 chosen at random**. Solving Kish's approximation, the intraclass correlation is $`\hat{\rho} \approx 0.43`$ (0.42683 rounded to 2 decimals): students of the same school are very similar, so each additional school brings far more information than each additional student. In 10th grade and high school $`\hat{\rho}`$ drops to values between 0.0698 and 0.1639 (an approximation, see Limitations).
 
-**4. Comparaciones entre dominios con la incertidumbre correcta.** Por ejemplo, en Matemática de 4.º EGB las instituciones particulares (692,49; IC 95 % [686,53; 698,45]) superan a las fiscales (665,58; [657,55; 673,61]). Con el diseño completo los intervalos siguen sin superponerse; en ese mismo grado y campo, las comparaciones por área y por régimen tienen intervalos que sí se superponen y no permiten afirmar diferencias.
+**4. Domain comparisons with the correct uncertainty.** For example, in 4th-grade Mathematics private schools (692.49; 95 % CI [686.53, 698.45]) outperform public ones (665.58; [657.55, 673.61]). With the full design the intervals still do not overlap; in that same grade and subject, the comparisons by area and by school calendar have overlapping intervals and do not support claims of a difference.
 
-![Matemática por sostenimiento](outputs/figuras/matematica_por_sostenimiento.png)
+![Mathematics by school funding](outputs/figuras/matematica_por_sostenimiento.png)
 
-Todas las tablas están en [`outputs/tablas/`](outputs/tablas/): medias por diseño, comparación, dominios, niveles de logro y verificaciones.
+All tables are in [`outputs/tablas/`](outputs/tablas/): means by design, comparison, domains, achievement levels and checks.
 
-## Verificación
+## Verification
 
-[`R/05_verificaciones.R`](R/05_verificaciones.R) recalcula desde cero, para cada grado y campo, la media de Hájek, el error estándar de los tres diseños con la fórmula de arriba y la ausencia de estratos con una sola institución, y detiene el análisis si algo no coincide con `survey`: **98 de 98 comprobaciones correctas**.
+[`R/05_verificaciones.R`](R/05_verificaciones.R) recomputes from scratch, for each grade and subject, the Hájek mean, the standard error of the three designs with the formula above and the absence of strata with a single school, and stops the analysis if anything differs from `survey`: **98 of 98 checks pass**. A [GitHub Actions workflow](.github/workflows/verificaciones.yml) reruns everything on a clean machine with the exact package versions on every change and on the first day of each month.
 
-## Cómo reproducir
+## How to reproduce
 
 ```r
-# En R 4.5, desde la raíz del proyecto (o abriendo el .Rproj en RStudio):
-install.packages(c("readr", "dplyr", "tidyr", "purrr", "tibble", "survey", "ggplot2"))
-source("R/99_run_all.R")   # descarga los datos oficiales y genera tablas y figuras (~1 min)
+# In R 4.5, from the project root (or by opening the .Rproj in RStudio):
+install.packages("renv")
+renv::restore()            # installs the exact versions recorded in renv.lock
+source("R/99_run_all.R")   # downloads the official data and builds tables and figures (~1 min)
 ```
 
-| Script | Qué hace |
+| Script | What it does |
 |---|---|
-| `00_setup.R` | Paquetes, rutas, campos y grados |
-| `01_descargar_datos.R` | Descarga el CSV oficial y verifica columnas y registros |
-| `02_importar.R` | Lee, etiqueta con el diccionario oficial y construye los estratos |
-| `03_disenos.R` | Declara los tres diseños |
-| `04_estimaciones.R` | Medias, errores estándar, DEFF, dominios y niveles de logro |
-| `05_verificaciones.R` | Recalcula todo a mano |
-| `06_figuras.R` | Figuras |
+| `00_setup.R` | Packages, paths, subjects and grades |
+| `01_descargar_datos.R` | Downloads the official CSV and checks columns and records |
+| `02_importar.R` | Reads, labels with the official codebook and builds the strata |
+| `03_disenos.R` | Declares the three designs |
+| `04_estimaciones.R` | Means, standard errors, DEFF, domains and achievement levels |
+| `05_verificaciones.R` | Recomputes everything by hand |
+| `06_figuras.R` | Figures |
 
-## Estructura del proyecto
+## Project structure
 
 ```
 muestreo-complejo-ser-estudiante/
-├── R/                    # 00 → 06 y 99_run_all.R
-├── outputs/tablas/       # resultados en CSV (incluye verificaciones.csv)
-├── outputs/figuras/      # 3 figuras
-├── data/                 # se crea al ejecutar (no se versiona)
+├── R/                    # 00 → 06 and 99_run_all.R
+├── outputs/tablas/       # results as CSV (including verificaciones.csv)
+├── outputs/figuras/      # 3 figures
+├── data/                 # created on run (not versioned)
+├── renv.lock             # exact package versions
+├── .github/workflows/    # automatic verification
 ├── muestreo-complejo-ser-estudiante.Rproj
 └── LICENSE
 ```
 
-## Limitaciones
+## Limitations
 
-- La varianza trata a las instituciones como seleccionadas **con reemplazo** y no usa la corrección por población finita ni la selección proporcional al tamaño exacta: es la aproximación estándar cuando no se publican las probabilidades de cada etapa y suele ser algo conservadora.
-- Los factores de expansión ya incluyen ajustes por no respuesta que no se pueden replicar sin información adicional del Ineval; aquí se toman como dados.
-- La descomposición de Kish es una aproximación; $`\hat{\rho}`$ debe leerse como orden de magnitud, no como estimación exacta.
-- Por recomendación del Ineval se analiza cada campo con su propio factor y no se usa el promedio global.
+- The variance treats schools as sampled **with replacement** and uses neither the finite population correction nor the exact probability-proportional-to-size selection: this is the standard approximation when stage-wise probabilities are not published, and it tends to be somewhat conservative.
+- The sampling weights already include non-response adjustments that cannot be replicated without additional information from Ineval; here they are taken as given.
+- Kish's decomposition is an approximation; $`\hat{\rho}`$ should be read as an order of magnitude, not an exact estimate.
+- Following Ineval's recommendation, each subject is analyzed with its own weight and the overall average is not used.
 
-## Lo que aprendí
+## What I learned
 
-- Los pesos y el diseño resuelven problemas distintos: los pesos corrigen el **sesgo**, los conglomerados y estratos corrigen la **varianza**. Usar solo pesos da una estimación puntual correcta con una precisión ficticia.
-- Un DEFF de 30 significa que miles de observaciones valen como unos cientos: la unidad que aporta información es la institución, no el estudiante.
-- Verificar cada salida de `survey` contra su fórmula es la mejor forma de entender qué hace el paquete (y de detectar un diseño mal declarado).
+- Weights and design solve different problems: weights correct **bias**, clusters and strata correct **variance**. Using weights only gives a correct point estimate with a fictitious precision.
+- A DEFF of 30 means thousands of observations are worth a few hundred: the unit that carries information is the school, not the student.
+- Checking every `survey` output against its formula is the best way to understand what the package does (and to catch a misdeclared design).
 
 ---
 
-### Portafolio *De Matemático a Data Scientist*
+### Portfolio *From Mathematician to Data Scientist*
 
-| Proyecto | Pregunta | Herramientas |
+| Project | Question | Tools |
 |---|---|---|
-| **Muestreo complejo con Ser Estudiante** (este repositorio) | ¿Cuánto se equivoca quien ignora el diseño muestral? | R, survey |
-| [EDA con datos sucios: defunciones 2021](https://github.com/Eduardo0602/eda-limpieza-defunciones-ecuador-pandas-sql) | ¿Qué hay que corregir antes de confiar en un registro oficial? | Python, pandas, SQL |
-| [Regresión lineal desde cero](https://github.com/Eduardo0602/regresion-lineal-numpy-desde-cero) | ¿Puede un plano predecir la profundidad de los sismos de Ecuador? | Python, NumPy |
-| [Álgebra lineal visual](https://github.com/Eduardo0602/algebra-lineal-visual-numpy) | ¿Qué hace geométricamente una matriz? | Python, NumPy |
+| **Complex survey sampling with Ser Estudiante** (this repository) | How wrong is an analysis that ignores the sampling design? | R, survey |
+| [Messy-data EDA: deaths 2021](https://github.com/Eduardo0602/eda-limpieza-defunciones-ecuador-pandas-sql) | What must be fixed before trusting an official registry? | Python, pandas, SQL |
+| [Linear regression from scratch](https://github.com/Eduardo0602/regresion-lineal-numpy-desde-cero) | Can a plane predict how deep Ecuador's earthquakes are? | Python, NumPy |
+| [Visual linear algebra](https://github.com/Eduardo0602/algebra-lineal-visual-numpy) | What does a matrix do, geometrically? | Python, NumPy |
 
-Eduardo Araque · Matemático (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-j%C3%A1come-311b93235)
+Eduardo Araque · Mathematician (Universidad Central del Ecuador) · [GitHub](https://github.com/Eduardo0602) · [LinkedIn](https://www.linkedin.com/in/eduardo-araque-j%C3%A1come-311b93235)
