@@ -1,0 +1,11 @@
+# Datos: se descargan de la fuente oficial (ver README)
+data/raw/
+data/processed/
+docs/*.ods
+docs/diccionario.txt
+# R / RStudio
+.Rhistory
+.RData
+.Rproj.user/
+renv/library/
+renv/staging/
