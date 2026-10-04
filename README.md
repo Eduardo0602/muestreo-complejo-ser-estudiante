@@ -4,7 +4,7 @@
 
 An R analysis of the official microdata of **Ser Estudiante 2024-2025** (Ineval, 50,578 students, 1,197 schools) that compares three ways of declaring the same sample and shows, with the formulas and hand-made checks, why only one of them is correct.
 
-[![verificaciones](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/actions/workflows/verificaciones.yml/badge.svg)](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/actions/workflows/verificaciones.yml) ![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![renv](https://img.shields.io/badge/renv-locked-7A1F2B) ![License](https://img.shields.io/badge/license-MIT-green)
+![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![renv](https://img.shields.io/badge/renv-locked-7A1F2B) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## The problem
 
@@ -82,7 +82,7 @@ All tables are in [`outputs/tablas/`](outputs/tablas/): means by design, compari
 
 ## Verification
 
-[`R/05_verificaciones.R`](R/05_verificaciones.R) recomputes from scratch, for each grade and subject, the Hájek mean, the standard error of the three designs with the formula above and the absence of strata with a single school, and stops the analysis if anything differs from `survey`: **98 of 98 checks pass**. A [GitHub Actions workflow](.github/workflows/verificaciones.yml) reruns everything on a clean machine with the exact package versions on every change and on the first day of each month.
+[`R/05_verificaciones.R`](R/05_verificaciones.R) recomputes from scratch, for each grade and subject, the Hájek mean, the standard error of the three designs with the formula above and the absence of strata with a single school, and stops the analysis if anything differs from `survey`: **98 of 98 checks pass**.
 
 ## How to reproduce
 
@@ -112,7 +112,6 @@ muestreo-complejo-ser-estudiante/
 ├── outputs/figuras/      # 3 figures
 ├── data/                 # created on run (not versioned)
 ├── renv.lock             # exact package versions
-├── .github/workflows/    # automatic verification
 ├── muestreo-complejo-ser-estudiante.Rproj
 └── LICENSE
 ```

@@ -1,16 +1,11 @@
+# PENDIENTE: no puede descargar los datos desde GitHub (403 del portal); ver decisión sobre una copia CC BY.
 # Ejecuta el análisis completo en un equipo limpio: descarga los datos oficiales,
 # instala las versiones exactas de renv.lock y falla si alguna de las 98
 # verificaciones de 05_verificaciones.R no coincide con survey.
 name: verificaciones
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 12 1 * *"   # el día 1 de cada mes: detecta si el Ineval cambió los datos
-
+  workflow_dispatch:   # solo manual: el portal de datos abiertos bloquea (403) las IP de los servidores de GitHub
 jobs:
   analisis:
     runs-on: ubuntu-latest
