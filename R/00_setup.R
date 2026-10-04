@@ -31,6 +31,12 @@ URL_DATOS <- paste0(
   "ineval_serestudiante2024_2025_2025diciembre.csv"
 )
 
+# Copia sin modificar de los mismos datos (CC BY, Ineval), solo como respaldo.
+URL_COPIA <- paste0(
+  "https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/releases/download/",
+  "datos-2025-12/ineval_serestudiante2024_2025_2025diciembre.csv"
+)
+
 # Campos de evaluación de EGB (4.º, 7.º y 10.º) y bachillerato (3.º BGU).
 # Cada puntaje se estima SOLO con su propio factor de expansión.
 CAMPOS <- tibble::tribble(

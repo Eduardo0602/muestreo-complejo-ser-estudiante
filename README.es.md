@@ -4,7 +4,7 @@
 
 Análisis en R de los microdatos oficiales de **Ser Estudiante 2024-2025** (Ineval, 50 578 estudiantes, 1 197 instituciones) que compara tres formas de declarar la misma muestra y muestra, con las fórmulas y verificaciones a mano, por qué solo una de ellas es correcta.
 
-![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![renv](https://img.shields.io/badge/renv-bloqueado-7A1F2B) ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
+[![verificaciones](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/actions/workflows/verificaciones.yml/badge.svg)](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/actions/workflows/verificaciones.yml) ![R](https://img.shields.io/badge/R-4.5-276DC3?logo=r&logoColor=white) ![survey](https://img.shields.io/badge/survey-4.5-0F5E7A) ![tidyverse](https://img.shields.io/badge/tidyverse-1A162D?logo=tidyverse) ![renv](https://img.shields.io/badge/renv-bloqueado-7A1F2B) ![Licencia](https://img.shields.io/badge/licencia-MIT-green)
 
 ## El problema
 
@@ -22,7 +22,7 @@ Pregunta: **¿cuánto cambian la estimación y su incertidumbre según la forma 
 
 ## Datos
 
-Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*, publicado el 15 de diciembre de 2025 en el [portal de datos abiertos del Ecuador](https://www.datosabiertos.gob.ec/dataset/da1aeddc-3bd6-4399-a840-2f5ec67ba64e). Los datos **no se incluyen** en este repositorio: el script los descarga de la fuente oficial. Los códigos anónimos de estudiante cambian entre descargas, pero las estimaciones no.
+Instituto Nacional de Evaluación Educativa (Ineval), *Ser Estudiante 2024-2025*, publicado el 15 de diciembre de 2025 en el [portal de datos abiertos del Ecuador](https://www.datosabiertos.gob.ec/dataset/da1aeddc-3bd6-4399-a840-2f5ec67ba64e). Los datos **no se versionan** en este repositorio: el script los descarga de la fuente oficial. Como el portal bloquea a los servidores de GitHub (HTTP 403), se conserva una copia sin modificar como [release](https://github.com/Eduardo0602/muestreo-complejo-ser-estudiante/releases/tag/datos-2025-12), que se usa solo de respaldo. Los datos tienen licencia CC BY (autoría: Ineval); el código es MIT. Los códigos anónimos de estudiante cambian entre descargas, pero las estimaciones no.
 
 ## Fundamento matemático
 
@@ -82,7 +82,7 @@ Todas las tablas están en [`outputs/tablas/`](outputs/tablas/): medias por dise
 
 ## Verificación
 
-[`R/05_verificaciones.R`](R/05_verificaciones.R) recalcula desde cero, para cada grado y campo, la media de Hájek, el error estándar de los tres diseños con la fórmula de arriba y la ausencia de estratos con una sola institución, y detiene el análisis si algo no coincide con `survey`: **98 de 98 comprobaciones correctas**.
+[`R/05_verificaciones.R`](R/05_verificaciones.R) recalcula desde cero, para cada grado y campo, la media de Hájek, el error estándar de los tres diseños con la fórmula de arriba y la ausencia de estratos con una sola institución, y detiene el análisis si algo no coincide con `survey`: **98 de 98 comprobaciones correctas**. Un [flujo de GitHub Actions](.github/workflows/verificaciones.yml) repite todo en un equipo limpio, con las versiones exactas de los paquetes, en cada cambio y el día 1 de cada mes.
 
 ## Cómo reproducir
 
@@ -112,6 +112,7 @@ muestreo-complejo-ser-estudiante/
 ├── outputs/figuras/      # 3 figuras
 ├── data/                 # se crea al ejecutar (no se versiona)
 ├── renv.lock             # versiones exactas de los paquetes
+├── .github/workflows/    # verificación automática
 ├── muestreo-complejo-ser-estudiante.Rproj
 └── LICENSE
 ```

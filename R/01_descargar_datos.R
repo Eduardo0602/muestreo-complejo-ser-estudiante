@@ -2,13 +2,27 @@
 #
 # Fuente: Instituto Nacional de Evaluación Educativa (Ineval), "Ser Estudiante
 # 2024-2025", portal de datos abiertos del Ecuador (publicado el 2025-12-15).
-# Los datos NO se incluyen en el repositorio: cada usuario los descarga de la
-# fuente oficial.
+# Los datos NO se incluyen en el repositorio: se descargan de la fuente oficial.
+# Respaldo: el portal responde 403 a los servidores de GitHub, así que si falla
+# se usa la copia sin modificar (licencia CC BY, autoría del Ineval) publicada
+# como release de este repositorio.
+
+descargar <- function(url) {
+  ok <- tryCatch({
+    suppressWarnings(download.file(url, RUTAS$crudo, mode = "wb", quiet = TRUE))
+    TRUE
+  }, error = function(e) FALSE)
+  if (!ok && file.exists(RUTAS$crudo)) file.remove(RUTAS$crudo)
+  ok
+}
 
 if (!file.exists(RUTAS$crudo)) {
   dir.create(dirname(RUTAS$crudo), recursive = TRUE, showWarnings = FALSE)
   message("Descargando microdatos del Ineval (~11 MB)...")
-  download.file(URL_DATOS, RUTAS$crudo, mode = "wb", quiet = TRUE)
+  if (!descargar(URL_DATOS)) {
+    message("El portal oficial no respondió; usando la copia CC BY del repositorio.")
+    stopifnot("No se pudieron descargar los datos" = descargar(URL_COPIA))
+  }
 }
 
 # Huella de control: si el Ineval publica una versión distinta, estas cifras
